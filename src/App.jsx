@@ -911,6 +911,34 @@ export default function App() {
   const toggleWishlistItem = async (id, comprado) => {
     await updateWishlistComprado(id, comprado);
     setWishlist(prev => prev.map(i => i.id === id ? { ...i, comprado } : i));
+
+    // Quando marcado como comprado → registrar como gasto no mês
+    if (comprado) {
+      const item = wishlist.find(i => i.id === id);
+      if (item) {
+        const today = new Date().toLocaleDateString("pt-BR");
+        // Usa o mês planejado se válido, senão usa o mês atual
+        const mesAtual = (() => {
+          const n = new Date();
+          const nomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          return `${nomes[n.getMonth()]}/${n.getFullYear()}`;
+        })();
+        const mes = (item.mes_planejado && MESES.includes(item.mes_planejado))
+          ? item.mes_planejado
+          : (MESES.includes(mesAtual) ? mesAtual : MESES[0]);
+        try {
+          const novoGasto = await insertGasto({
+            mes, pessoa: item.pessoa,
+            desc: `🛍️ ${item.nome}`,
+            valor: item.valor, cat: "Compras", data: today,
+          });
+          setDados(prev => ({
+            ...prev,
+            [mes]: { ...prev[mes], [item.pessoa]: [...(prev[mes]?.[item.pessoa] ?? []), novoGasto] },
+          }));
+        } catch (e) { console.error("Erro ao registrar wishlist como gasto:", e); }
+      }
+    }
   };
 
   const removeWishlistItem = async (id) => {
@@ -922,6 +950,20 @@ export default function App() {
   const addPoupanca = async (dados) => {
     const novo = await insertPoupanca(dados);
     setPoupanca(prev => [...prev, novo]);
+
+    // Registrar como gasto para deduzir do orçamento do mês
+    const today = new Date().toLocaleDateString("pt-BR");
+    try {
+      const novoGasto = await insertGasto({
+        mes: dados.mes, pessoa: dados.pessoa,
+        desc: `🐷 Poupança${dados.descricao ? `: ${dados.descricao}` : ""}`,
+        valor: dados.valor, cat: "Outros", data: today,
+      });
+      setDados(prev => ({
+        ...prev,
+        [dados.mes]: { ...prev[dados.mes], [dados.pessoa]: [...(prev[dados.mes]?.[dados.pessoa] ?? []), novoGasto] },
+      }));
+    } catch (e) { console.error("Erro ao registrar poupança como gasto:", e); }
   };
 
   const removePoupanca = async (id) => {
