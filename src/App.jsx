@@ -162,7 +162,7 @@ function LoginScreen({ onLogin }) {
       <div style={{ background:"#fff", borderRadius:24, padding:"40px 36px", maxWidth:380, width:"100%", boxShadow:"0 24px 80px rgba(99,102,241,0.25)", animation:"fadeIn 0.4s ease" }}>
         {/* Logo */}
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ fontSize:42, marginBottom:10 }}>💑</div>
+          <div style={{ fontSize:42, marginBottom:10 }}>💝</div>
           <div style={{ fontSize:22, fontWeight:800, color:"#0f172a", letterSpacing:"-0.5px" }}>Mesada do Casal</div>
           <div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>Entre com sua conta para continuar</div>
         </div>
