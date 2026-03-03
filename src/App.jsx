@@ -4,6 +4,7 @@ import {
   Area, AreaChart, BarChart, Bar, Legend,
 } from "recharts";
 import {
+  supabase, signIn, signOut, getSession,
   fetchGastos, insertGasto, deleteGasto, deleteGastosPessoaMes, deleteGastoBySourceId,
   fetchLimites, saveLimites,
   fetchWishlist, insertWishlistItem, updateWishlistComprado, deleteWishlistItem,
@@ -130,7 +131,125 @@ const inp = { border:"1.5px solid #e2e8f0", borderRadius:8, padding:"9px 12px", 
 
 // ── NAV TAB BAR ───────────────────────────────────────────────────────────────
 
-function NavBar({ aba, setAba }) {
+// ── LOGIN SCREEN ──────────────────────────────────────────────────────────────
+
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPass, setShowPass] = useState(false);
+
+  const handle = async (e) => {
+    e.preventDefault();
+    if (!username.trim() || !password) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await signIn(username.trim(), password);
+      onLogin();
+    } catch (err) {
+      setError("Usuário ou senha incorretos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#a78bfa 100%)", display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"'DM Sans',sans-serif" }}>
+      <style>{GLOBAL_CSS}</style>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <div style={{ background:"#fff", borderRadius:24, padding:"40px 36px", maxWidth:380, width:"100%", boxShadow:"0 24px 80px rgba(99,102,241,0.25)", animation:"fadeIn 0.4s ease" }}>
+        {/* Logo */}
+        <div style={{ textAlign:"center", marginBottom:32 }}>
+          <div style={{ fontSize:42, marginBottom:10 }}>💑</div>
+          <div style={{ fontSize:22, fontWeight:800, color:"#0f172a", letterSpacing:"-0.5px" }}>Mesada do Casal</div>
+          <div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>Entre com sua conta para continuar</div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{ background:"#fef2f2", border:"1.5px solid #fecaca", borderRadius:10, padding:"10px 14px", marginBottom:18, fontSize:13, color:"#ef4444", fontWeight:600, display:"flex", alignItems:"center", gap:8 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <form onSubmit={handle}>
+          {/* Username */}
+          <div style={{ marginBottom:16 }}>
+            <label style={{ display:"block", fontSize:12, fontWeight:700, color:"#374151", marginBottom:6, letterSpacing:0.3 }}>
+              USUÁRIO
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="GihBerson ou ArtBerson"
+              autoComplete="username"
+              style={{
+                width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid #e2e8f0",
+                fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none",
+                background:"#f8fafc", color:"#0f172a", boxSizing:"border-box",
+                transition:"border 0.15s",
+              }}
+              onFocus={e => e.target.style.borderColor="#6366f1"}
+              onBlur={e => e.target.style.borderColor="#e2e8f0"}
+            />
+          </div>
+
+          {/* Password */}
+          <div style={{ marginBottom:24 }}>
+            <label style={{ display:"block", fontSize:12, fontWeight:700, color:"#374151", marginBottom:6, letterSpacing:0.3 }}>
+              SENHA
+            </label>
+            <div style={{ position:"relative" }}>
+              <input
+                type={showPass ? "text" : "password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                style={{
+                  width:"100%", padding:"12px 44px 12px 14px", borderRadius:10, border:"1.5px solid #e2e8f0",
+                  fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none",
+                  background:"#f8fafc", color:"#0f172a", boxSizing:"border-box",
+                  transition:"border 0.15s",
+                }}
+                onFocus={e => e.target.style.borderColor="#6366f1"}
+                onBlur={e => e.target.style.borderColor="#e2e8f0"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(v => !v)}
+                style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", fontSize:16, color:"#94a3b8", padding:0 }}
+              >
+                {showPass ? "🙈" : "👁️"}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !username.trim() || !password}
+            style={{
+              width:"100%", padding:"14px", borderRadius:12, border:"none",
+              background: loading || !username.trim() || !password
+                ? "#e2e8f0"
+                : "linear-gradient(135deg,#6366f1,#8b5cf6)",
+              color: loading || !username.trim() || !password ? "#94a3b8" : "#fff",
+              fontWeight:700, fontSize:15, cursor: loading || !username.trim() || !password ? "not-allowed" : "pointer",
+              fontFamily:"'DM Sans',sans-serif", transition:"all 0.2s", letterSpacing:0.3,
+            }}
+          >
+            {loading ? "Entrando..." : "Entrar 🚀"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function NavBar({ aba, setAba, currentUser, onLogout }) {
   const tabs = [
     { id:"gastos",   icon:"💰", label:"Gastos"  },
     { id:"wishlist", icon:"✨", label:"Wishlist" },
@@ -153,6 +272,21 @@ function NavBar({ aba, setAba }) {
             <span>{t.icon}</span><span>{t.label}</span>
           </button>
         ))}
+        {/* User + Logout */}
+        <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:10, paddingLeft:12 }}>
+          {currentUser && (
+            <div style={{ fontSize:12, fontWeight:700, color:"#64748b", whiteSpace:"nowrap" }}>
+              {currentUser === "gi" ? "👩 Gi" : "👨 Art"}
+            </div>
+          )}
+          <button
+            onClick={onLogout}
+            title="Sair"
+            style={{ padding:"6px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", background:"#f8fafc", color:"#64748b", fontWeight:600, fontSize:12, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}
+          >
+            Sair
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -845,6 +979,7 @@ function PoupancaPage({ poupanca, onAdd, onDelete, error }) {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [session, setSession] = useState(undefined); // undefined = checking, null = not logged in
   const [aba, setAba] = useState("gastos");
   const [dados, setDados] = useState(emptyDados());
   const [limites, setLimites] = useState(DEFAULT_LIMITES);
@@ -853,6 +988,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // ── Auth
+  useEffect(() => {
+    getSession().then(s => setSession(s));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try { await signOut(); } catch {}
+    setSession(null);
+  };
+
+  const currentUser = session?.user?.user_metadata?.pessoa ?? null;
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -872,7 +1023,9 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => {
+    if (session) loadAll();
+  }, [session, loadAll]);
 
   // ── Gastos
   const addGasto = async (mes, { pessoa, desc, valor, cat, data }, onSuccess) => {
@@ -1004,13 +1157,19 @@ export default function App() {
     } catch (e) { console.error("Erro ao remover gasto da poupança:", e); }
   };
 
+  // While checking session, show spinner
+  if (session === undefined) return <Spinner />;
+
+  // Not authenticated → show login
+  if (!session) return <LoginScreen onLogin={() => {}} />;
+
   if (loading) return <Spinner />;
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc", fontFamily:"'DM Sans',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <NavBar aba={aba} setAba={setAba} />
+      <NavBar aba={aba} setAba={setAba} currentUser={currentUser} onLogout={handleLogout} />
       {aba === "gastos" && (
         <GastosPage dados={dados} limites={limites} loading={false} saving={saving} error={error}
           onLoadAll={() => { setError(null); loadAll(); }}

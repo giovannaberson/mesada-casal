@@ -5,6 +5,31 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+
+const USERNAME_TO_EMAIL = {
+  "gihberson": "gihberson@mesada.casal",
+  "artberson": "artberson@mesada.casal",
+};
+
+export async function signIn(username, password) {
+  const email = USERNAME_TO_EMAIL[username.toLowerCase()];
+  if (!email) throw new Error("Usuário não encontrado");
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
+export async function getSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
+}
+
 // ── GASTOS ────────────────────────────────────────────────────────────────────
 
 export async function fetchGastos(meses) {
