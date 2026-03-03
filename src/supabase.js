@@ -19,23 +19,29 @@ export async function fetchGastos(meses) {
     if (resultado[row.mes]) {
       resultado[row.mes][row.pessoa].push({
         id: row.id, desc: row.desc, valor: row.valor, cat: row.cat, data: row.data_str,
+        source_id: row.source_id || null,
       });
     }
   }
   return resultado;
 }
 
-export async function insertGasto({ mes, pessoa, desc, valor, cat, data }) {
+export async function insertGasto({ mes, pessoa, desc, valor, cat, data, source_id }) {
   const { data: rows, error } = await supabase
     .from("gastos")
-    .insert([{ mes, pessoa, desc, valor, cat, data_str: data }])
+    .insert([{ mes, pessoa, desc, valor, cat, data_str: data, source_id: source_id || null }])
     .select().single();
   if (error) throw error;
-  return { id: rows.id, desc: rows.desc, valor: rows.valor, cat: rows.cat, data: rows.data_str };
+  return { id: rows.id, desc: rows.desc, valor: rows.valor, cat: rows.cat, data: rows.data_str, source_id: rows.source_id || null };
 }
 
 export async function deleteGasto(id) {
   const { error } = await supabase.from("gastos").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteGastoBySourceId(sourceId) {
+  const { error } = await supabase.from("gastos").delete().eq("source_id", sourceId);
   if (error) throw error;
 }
 

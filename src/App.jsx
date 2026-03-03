@@ -4,7 +4,7 @@ import {
   Area, AreaChart, BarChart, Bar, Legend,
 } from "recharts";
 import {
-  fetchGastos, insertGasto, deleteGasto, deleteGastosPessoaMes,
+  fetchGastos, insertGasto, deleteGasto, deleteGastosPessoaMes, deleteGastoBySourceId,
   fetchLimites, saveLimites,
   fetchWishlist, insertWishlistItem, updateWishlistComprado, deleteWishlistItem,
   fetchPoupanca, insertPoupanca, deletePoupanca,
@@ -931,6 +931,7 @@ export default function App() {
             mes, pessoa: item.pessoa,
             desc: `🛍️ ${item.nome}`,
             valor: item.valor, cat: "Compras", data: today,
+            source_id: item.id,
           });
           setDados(prev => ({
             ...prev,
@@ -942,8 +943,25 @@ export default function App() {
   };
 
   const removeWishlistItem = async (id) => {
+    const item = wishlist.find(i => i.id === id);
     await deleteWishlistItem(id);
     setWishlist(prev => prev.filter(i => i.id !== id));
+    // Se estava comprado, remove o gasto vinculado
+    if (item?.comprado) {
+      try {
+        await deleteGastoBySourceId(id);
+        setDados(prev => {
+          const next = { ...prev };
+          for (const m of MESES) {
+            next[m] = {
+              gi: next[m].gi.filter(g => g.source_id !== id),
+              art: next[m].art.filter(g => g.source_id !== id),
+            };
+          }
+          return next;
+        });
+      } catch (e) { console.error("Erro ao remover gasto da wishlist:", e); }
+    }
   };
 
   // ── Poupança
@@ -958,6 +976,7 @@ export default function App() {
         mes: dados.mes, pessoa: dados.pessoa,
         desc: `🐷 Poupança${dados.descricao ? `: ${dados.descricao}` : ""}`,
         valor: dados.valor, cat: "Outros", data: today,
+        source_id: novo.id,
       });
       setDados(prev => ({
         ...prev,
@@ -969,6 +988,20 @@ export default function App() {
   const removePoupanca = async (id) => {
     await deletePoupanca(id);
     setPoupanca(prev => prev.filter(p => p.id !== id));
+    // Remove o gasto vinculado desta entrada de poupança
+    try {
+      await deleteGastoBySourceId(id);
+      setDados(prev => {
+        const next = { ...prev };
+        for (const m of MESES) {
+          next[m] = {
+            gi: next[m].gi.filter(g => g.source_id !== id),
+            art: next[m].art.filter(g => g.source_id !== id),
+          };
+        }
+        return next;
+      });
+    } catch (e) { console.error("Erro ao remover gasto da poupança:", e); }
   };
 
   if (loading) return <Spinner />;
