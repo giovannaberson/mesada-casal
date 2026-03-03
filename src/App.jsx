@@ -60,12 +60,21 @@ function useIsMobile() {
 const GLOBAL_CSS = `
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   * { box-sizing: border-box; }
   body { margin: 0; }
   input, select, textarea { font-family: 'DM Sans', sans-serif; }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+  .mobile-bottom-nav { display: none !important; }
+  .top-nav-tabs { display: flex; }
+  @media (max-width: 640px) {
+    .top-nav-tabs { display: none !important; }
+    .top-nav-brand { border-right: none !important; }
+    .mobile-bottom-nav { display: flex !important; }
+    .main-content { padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
+  }
 `;
 
 // ── BASE COMPONENTS ───────────────────────────────────────────────────────────
@@ -258,20 +267,22 @@ function NavBar({ aba, setAba, currentUser, onLogout }) {
   return (
     <div style={{ background:"#fff", borderBottom:"1.5px solid #e2e8f0", position:"sticky", top:0, zIndex:100, fontFamily:"'DM Sans',sans-serif" }}>
       <div style={{ maxWidth:960, margin:"0 auto", padding:"0 16px", display:"flex", alignItems:"center", gap:4 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:"#6366f1", paddingRight:12, borderRight:"1.5px solid #e2e8f0", marginRight:8, whiteSpace:"nowrap", padding:"14px 12px 14px 0" }}>
+        <div className="top-nav-brand" style={{ fontSize:13, fontWeight:800, color:"#6366f1", borderRight:"1.5px solid #e2e8f0", marginRight:8, whiteSpace:"nowrap", padding:"14px 12px 14px 0" }}>
           Mesada do Casal
         </div>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setAba(t.id)} style={{
-            padding:"14px 16px", border:"none", background:"none", cursor:"pointer",
-            fontSize:13, fontWeight:700, fontFamily:"'DM Sans',sans-serif",
-            color: aba === t.id ? "#6366f1" : "#64748b",
-            borderBottom: aba === t.id ? "2.5px solid #6366f1" : "2.5px solid transparent",
-            transition:"all 0.15s", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap",
-          }}>
-            <span>{t.icon}</span><span>{t.label}</span>
-          </button>
-        ))}
+        <div className="top-nav-tabs" style={{ display:"flex", alignItems:"center" }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setAba(t.id)} style={{
+              padding:"14px 16px", border:"none", background:"none", cursor:"pointer",
+              fontSize:13, fontWeight:700, fontFamily:"'DM Sans',sans-serif",
+              color: aba === t.id ? "#6366f1" : "#64748b",
+              borderBottom: aba === t.id ? "2.5px solid #6366f1" : "2.5px solid transparent",
+              transition:"all 0.15s", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap",
+            }}>
+              <span>{t.icon}</span><span>{t.label}</span>
+            </button>
+          ))}
+        </div>
         {/* User + Logout */}
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:10, paddingLeft:12 }}>
           {currentUser && (
@@ -289,6 +300,88 @@ function NavBar({ aba, setAba, currentUser, onLogout }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── MOBILE BOTTOM NAV ─────────────────────────────────────────────────────────
+
+function MobileBottomNav({ aba, setAba, onAddGasto }) {
+  const tabs = [
+    { id:"gastos",   icon:"💰", label:"Gastos"   },
+    { id:"wishlist", icon:"✨", label:"Wishlist"  },
+    { id:"poupanca", icon:"🐷", label:"Poupança"  },
+  ];
+  const btn = (tab) => (
+    <button key={tab.id} onClick={() => setAba(tab.id)} style={{
+      flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+      gap:3, padding:"10px 0 8px", border:"none", background:"none", cursor:"pointer",
+      color: aba === tab.id ? "#6366f1" : "#94a3b8",
+      fontFamily:"'DM Sans',sans-serif", transition:"color 0.15s",
+    }}>
+      <span style={{ fontSize:22, lineHeight:1 }}>{tab.icon}</span>
+      <span style={{ fontSize:10, fontWeight:700, letterSpacing:0.3 }}>{tab.label}</span>
+      {aba === tab.id && (
+        <span style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:24, height:3, borderRadius:"3px 3px 0 0", background:"#6366f1" }} />
+      )}
+    </button>
+  );
+
+  return (
+    <nav className="mobile-bottom-nav" style={{
+      position:"fixed", bottom:0, left:0, right:0, zIndex:200,
+      background:"#fff", borderTop:"1.5px solid #e2e8f0",
+      display:"flex", alignItems:"flex-end",
+      paddingBottom:"env(safe-area-inset-bottom)",
+      boxShadow:"0 -4px 20px rgba(0,0,0,0.06)",
+    }}>
+      <div style={{ display:"flex", width:"100%", alignItems:"flex-end" }}>
+        {/* Tab 1 */}
+        <div style={{ flex:1, position:"relative" }}>{btn(tabs[0])}</div>
+        {/* Tab 2 */}
+        <div style={{ flex:1, position:"relative" }}>{btn(tabs[1])}</div>
+
+        {/* Central FAB */}
+        <div style={{ flex:1, display:"flex", justifyContent:"center", alignItems:"flex-end", paddingBottom:8 }}>
+          <button onClick={onAddGasto} style={{
+            width:56, height:56, borderRadius:"50%",
+            background:"linear-gradient(135deg,#6366f1,#8b5cf6)",
+            border:"3px solid #f8fafc",
+            boxShadow:"0 4px 18px rgba(99,102,241,0.45), 0 2px 8px rgba(0,0,0,0.12)",
+            color:"#fff", fontSize:30, fontWeight:300, lineHeight:1,
+            cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
+            transform:"translateY(-12px)",
+            fontFamily:"'DM Sans',sans-serif",
+            transition:"transform 0.15s, box-shadow 0.15s",
+          }}>+</button>
+        </div>
+
+        {/* Tab 3 */}
+        <div style={{ flex:1, position:"relative" }}>{btn(tabs[2])}</div>
+      </div>
+    </nav>
+  );
+}
+
+function MobileAddSheet({ onClose, onAdd, saving }) {
+  return (
+    <>
+      <div onClick={onClose} style={{
+        position:"fixed", inset:0, zIndex:300, background:"rgba(15,23,42,0.45)",
+        animation:"fadeIn 0.2s ease",
+      }} />
+      <div style={{
+        position:"fixed", bottom:0, left:0, right:0, zIndex:301,
+        background:"#f8fafc", borderRadius:"20px 20px 0 0",
+        padding:"12px 16px",
+        paddingBottom:"calc(24px + env(safe-area-inset-bottom))",
+        boxShadow:"0 -8px 32px rgba(0,0,0,0.14)",
+        animation:"slideUp 0.25s cubic-bezier(0.32,0.72,0,1)",
+        maxHeight:"90vh", overflowY:"auto",
+      }}>
+        <div style={{ width:40, height:4, borderRadius:2, background:"#e2e8f0", margin:"0 auto 16px" }} />
+        <AddGastoForm onAdd={onAdd} onClose={onClose} loading={saving} />
+      </div>
+    </>
   );
 }
 
@@ -994,6 +1087,7 @@ function PoupancaPage({ poupanca, onAdd, onDelete, error }) {
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = checking, null = not logged in
   const [aba, setAba] = useState("gastos");
+  const [showMobileAdd, setShowMobileAdd] = useState(false);
   const [dados, setDados] = useState(emptyDados());
   const [limites, setLimites] = useState(DEFAULT_LIMITES);
   const [wishlist, setWishlist] = useState([]);
@@ -1178,8 +1272,19 @@ export default function App() {
 
   if (loading) return <Spinner />;
 
+  // Current month key for mobile FAB add
+  const currentMes = (() => {
+    const d = new Date();
+    const mesNomes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    return `${mesNomes[d.getMonth()]}/${d.getFullYear()}`;
+  })();
+
+  const handleMobileAddGasto = async (gastoData) => {
+    await addGasto(currentMes, gastoData, () => setShowMobileAdd(false));
+  };
+
   return (
-    <div style={{ minHeight:"100vh", background:"#f8fafc", fontFamily:"'DM Sans',sans-serif" }}>
+    <div className="main-content" style={{ minHeight:"100vh", background:"#f8fafc", fontFamily:"'DM Sans',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <NavBar aba={aba} setAba={setAba} currentUser={currentUser} onLogout={handleLogout} />
@@ -1196,6 +1301,14 @@ export default function App() {
       {aba === "poupanca" && (
         <PoupancaPage poupanca={poupanca} error={error}
           onAdd={addPoupanca} onDelete={removePoupanca} />
+      )}
+      <MobileBottomNav aba={aba} setAba={setAba} onAddGasto={() => setShowMobileAdd(true)} />
+      {showMobileAdd && (
+        <MobileAddSheet
+          onClose={() => setShowMobileAdd(false)}
+          onAdd={handleMobileAddGasto}
+          saving={saving}
+        />
       )}
     </div>
   );
