@@ -74,6 +74,7 @@ const GLOBAL_CSS = `
     .top-nav-brand { border-right: none !important; }
     .mobile-bottom-nav { display: flex !important; }
     .main-content { padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
+    .mobile-hide { display: none !important; }
   }
 `;
 
@@ -265,7 +266,7 @@ function NavBar({ aba, setAba, currentUser, onLogout }) {
     { id:"poupanca", icon:"🐷", label:"Poupança" },
   ];
   return (
-    <div style={{ background:"#fff", borderBottom:"1.5px solid #e2e8f0", position:"sticky", top:0, zIndex:100, fontFamily:"'DM Sans',sans-serif" }}>
+    <div style={{ background:"#fff", borderBottom:"1.5px solid #e2e8f0", position:"sticky", top:0, zIndex:100, fontFamily:"'DM Sans',sans-serif", paddingTop:"env(safe-area-inset-top)" }}>
       <div style={{ maxWidth:960, margin:"0 auto", padding:"0 16px", display:"flex", alignItems:"center", gap:4 }}>
         <div className="top-nav-brand" style={{ fontSize:13, fontWeight:800, color:"#6366f1", borderRight:"1.5px solid #e2e8f0", marginRight:8, whiteSpace:"nowrap", padding:"14px 12px 14px 0" }}>
           Mesada do Casal
@@ -305,58 +306,62 @@ function NavBar({ aba, setAba, currentUser, onLogout }) {
 
 // ── MOBILE BOTTOM NAV ─────────────────────────────────────────────────────────
 
-function MobileBottomNav({ aba, setAba, onAddGasto }) {
+function MobileBottomNav({ aba, setAba, onAddGasto, onOpenLimites }) {
   const tabs = [
-    { id:"gastos",   icon:"💰", label:"Gastos"   },
-    { id:"wishlist", icon:"✨", label:"Wishlist"  },
-    { id:"poupanca", icon:"🐷", label:"Poupança"  },
+    { id:"gastos",   icon:"💰", label:"Gastos"  },
+    { id:"wishlist", icon:"✨", label:"Wishlist" },
+    { id:"poupanca", icon:"🐷", label:"Poupança" },
+    { id:"limites",  icon:"✏️", label:"Limites",  action: onOpenLimites },
   ];
-  const btn = (tab) => (
-    <button key={tab.id} onClick={() => setAba(tab.id)} style={{
-      flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-      gap:3, padding:"10px 0 8px", border:"none", background:"none", cursor:"pointer",
-      color: aba === tab.id ? "#6366f1" : "#94a3b8",
-      fontFamily:"'DM Sans',sans-serif", transition:"color 0.15s",
-    }}>
-      <span style={{ fontSize:22, lineHeight:1 }}>{tab.icon}</span>
-      <span style={{ fontSize:10, fontWeight:700, letterSpacing:0.3 }}>{tab.label}</span>
-      {aba === tab.id && (
-        <span style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:24, height:3, borderRadius:"3px 3px 0 0", background:"#6366f1" }} />
-      )}
-    </button>
-  );
+
+  const tabBtn = (tab) => {
+    const isActive = aba === tab.id;
+    return (
+      <button key={tab.id} onClick={tab.action ?? (() => setAba(tab.id))} style={{
+        flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end",
+        gap:2, paddingBottom:8, paddingTop:8, border:"none", background:"none", cursor:"pointer",
+        color: isActive ? "#6366f1" : "#94a3b8",
+        fontFamily:"'DM Sans',sans-serif", transition:"color 0.15s", position:"relative",
+        WebkitTapHighlightColor:"transparent", minHeight:56,
+      }}>
+        <span style={{ fontSize:20, lineHeight:1 }}>{tab.icon}</span>
+        <span style={{ fontSize:10, fontWeight:700, letterSpacing:0.2 }}>{tab.label}</span>
+        {isActive && (
+          <span style={{ position:"absolute", bottom:0, left:"50%", transform:"translateX(-50%)", width:20, height:3, borderRadius:"3px 3px 0 0", background:"#6366f1" }} />
+        )}
+      </button>
+    );
+  };
 
   return (
     <nav className="mobile-bottom-nav" style={{
       position:"fixed", bottom:0, left:0, right:0, zIndex:200,
       background:"#fff", borderTop:"1.5px solid #e2e8f0",
-      display:"flex", alignItems:"flex-end",
-      paddingBottom:"env(safe-area-inset-bottom)",
       boxShadow:"0 -4px 20px rgba(0,0,0,0.06)",
+      paddingBottom:"env(safe-area-inset-bottom)",
     }}>
       <div style={{ display:"flex", width:"100%", alignItems:"flex-end" }}>
-        {/* Tab 1 */}
-        <div style={{ flex:1, position:"relative" }}>{btn(tabs[0])}</div>
-        {/* Tab 2 */}
-        <div style={{ flex:1, position:"relative" }}>{btn(tabs[1])}</div>
+        {/* Gastos + Wishlist */}
+        {tabBtn(tabs[0])}
+        {tabBtn(tabs[1])}
 
-        {/* Central FAB */}
-        <div style={{ flex:1, display:"flex", justifyContent:"center", alignItems:"flex-end", paddingBottom:8 }}>
+        {/* FAB central — elevated */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", paddingBottom:10, minHeight:56, WebkitTapHighlightColor:"transparent" }}>
           <button onClick={onAddGasto} style={{
-            width:56, height:56, borderRadius:"50%",
+            width:52, height:52, borderRadius:"50%",
             background:"linear-gradient(135deg,#6366f1,#8b5cf6)",
-            border:"3px solid #f8fafc",
-            boxShadow:"0 4px 18px rgba(99,102,241,0.45), 0 2px 8px rgba(0,0,0,0.12)",
-            color:"#fff", fontSize:30, fontWeight:300, lineHeight:1,
+            border:"3.5px solid #fff",
+            boxShadow:"0 4px 18px rgba(99,102,241,0.5), 0 2px 6px rgba(0,0,0,0.12)",
+            color:"#fff", fontSize:28, fontWeight:300, lineHeight:1,
             cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
-            transform:"translateY(-12px)",
-            fontFamily:"'DM Sans',sans-serif",
-            transition:"transform 0.15s, box-shadow 0.15s",
+            transform:"translateY(-10px)",
+            WebkitTapHighlightColor:"transparent",
           }}>+</button>
         </div>
 
-        {/* Tab 3 */}
-        <div style={{ flex:1, position:"relative" }}>{btn(tabs[2])}</div>
+        {/* Poupança + Limites */}
+        {tabBtn(tabs[2])}
+        {tabBtn(tabs[3])}
       </div>
     </nav>
   );
@@ -592,9 +597,8 @@ function DetalhesMes({ mes, data, limites, onBack, onAdd, onDeleteItem, onDelete
   );
 }
 
-function GastosPage({ dados, limites, loading, saving, error, onLoadAll, onAdd, onDeleteItem, onDeleteAll, onSaveLimites }) {
+function GastosPage({ dados, limites, loading, saving, error, onLoadAll, onAdd, onDeleteItem, onDeleteAll, onSaveLimites, onOpenLimites }) {
   const [mesSel, setMesSel] = useState(null);
-  const [showEditLimites, setShowEditLimites] = useState(false);
   const [filtroGi, setFiltroGi] = useState("Todos");
   const [filtroArt, setFiltroArt] = useState("Todos");
   const isMobile = useIsMobile();
@@ -621,7 +625,6 @@ function GastosPage({ dados, limites, loading, saving, error, onLoadAll, onAdd, 
   return (
     <div style={{ maxWidth:960, margin:"0 auto", padding: isMobile ? "20px 14px" : "32px 24px", fontFamily:"'DM Sans',sans-serif" }}>
       {error && <ErrorBanner message={error} onRetry={onLoadAll} />}
-      {showEditLimites && <EditLimitesModal limites={limites} onSave={(l) => { onSaveLimites(l); setShowEditLimites(false); }} onClose={() => setShowEditLimites(false)} loading={saving} />}
 
       {/* Header */}
       <div style={{ marginBottom:28, display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12 }}>
@@ -629,7 +632,7 @@ function GastosPage({ dados, limites, loading, saving, error, onLoadAll, onAdd, 
           <h1 style={{ margin:0, fontSize: isMobile ? 24 : 30, fontWeight:800, color:"#0f172a" }}>💰 Controle de Gastos</h1>
           <div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>💙 Gi: R$ {limites.gi} · 💜 Art: R$ {limites.art}</div>
         </div>
-        <button onClick={() => setShowEditLimites(true)} style={{ background:"#fff", border:"1.5px solid #e2e8f0", color:"#6366f1", borderRadius:10, padding:"9px 14px", fontWeight:700, cursor:"pointer", fontSize:13, display:"flex", alignItems:"center", gap:6, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>✏️ Editar limites</button>
+        <button className="mobile-hide" onClick={onOpenLimites} style={{ background:"#fff", border:"1.5px solid #e2e8f0", color:"#6366f1", borderRadius:10, padding:"9px 14px", fontWeight:700, cursor:"pointer", fontSize:13, display:"flex", alignItems:"center", gap:6, boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>✏️ Editar limites</button>
       </div>
 
       {/* Charts */}
@@ -1088,6 +1091,7 @@ export default function App() {
   const [session, setSession] = useState(undefined); // undefined = checking, null = not logged in
   const [aba, setAba] = useState("gastos");
   const [showMobileAdd, setShowMobileAdd] = useState(false);
+  const [showLimites, setShowLimites] = useState(false);
   const [dados, setDados] = useState(emptyDados());
   const [limites, setLimites] = useState(DEFAULT_LIMITES);
   const [wishlist, setWishlist] = useState([]);
@@ -1288,11 +1292,12 @@ export default function App() {
       <style>{GLOBAL_CSS}</style>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <NavBar aba={aba} setAba={setAba} currentUser={currentUser} onLogout={handleLogout} />
+      {showLimites && <EditLimitesModal limites={limites} onSave={(l) => { handleSaveLimites(l); setShowLimites(false); }} onClose={() => setShowLimites(false)} loading={saving} />}
       {aba === "gastos" && (
         <GastosPage dados={dados} limites={limites} loading={false} saving={saving} error={error}
           onLoadAll={() => { setError(null); loadAll(); }}
           onAdd={addGasto} onDeleteItem={handleDeleteItem} onDeleteAll={handleDeleteAll}
-          onSaveLimites={handleSaveLimites} />
+          onSaveLimites={handleSaveLimites} onOpenLimites={() => setShowLimites(true)} />
       )}
       {aba === "wishlist" && (
         <WishlistPage wishlist={wishlist} error={error}
@@ -1302,7 +1307,7 @@ export default function App() {
         <PoupancaPage poupanca={poupanca} error={error}
           onAdd={addPoupanca} onDelete={removePoupanca} />
       )}
-      <MobileBottomNav aba={aba} setAba={setAba} onAddGasto={() => setShowMobileAdd(true)} />
+      <MobileBottomNav aba={aba} setAba={setAba} onAddGasto={() => setShowMobileAdd(true)} onOpenLimites={() => setShowLimites(true)} />
       {showMobileAdd && (
         <MobileAddSheet
           onClose={() => setShowMobileAdd(false)}
