@@ -100,10 +100,10 @@ export async function fetchWishlist() {
   return data;
 }
 
-export async function insertWishlistItem({ pessoa, nome, link, valor, mes_planejado, nivel_desejo }) {
+export async function insertWishlistItem({ pessoa, nome, link, valor, mes_planejado, nivel_desejo, motivo }) {
   const { data, error } = await supabase
     .from("wishlist")
-    .insert([{ pessoa, nome, link: link || null, valor, mes_planejado: mes_planejado || null, nivel_desejo }])
+    .insert([{ pessoa, nome, link: link || null, valor, mes_planejado: mes_planejado || null, nivel_desejo, motivo: motivo || null }])
     .select().single();
   if (error) throw error;
   return data;

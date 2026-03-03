@@ -601,10 +601,11 @@ function AddWishlistForm({ onAdd, onClose, loading }) {
   const [valor, setValor] = useState("");
   const [mes, setMes] = useState("");
   const [nivel, setNivel] = useState("quero");
+  const [motivo, setMotivo] = useState("");
 
   const handle = () => {
     if (!nome || !valor) return;
-    onAdd({ pessoa, nome, link, valor: parseFloat(valor), mes_planejado: mes, nivel_desejo: nivel });
+    onAdd({ pessoa, nome, link, valor: parseFloat(valor), mes_planejado: mes, nivel_desejo: nivel, motivo });
   };
 
   return (
@@ -636,6 +637,13 @@ function AddWishlistForm({ onAdd, onClose, loading }) {
           ))}
         </div>
       </div>
+      <textarea
+        style={{ ...inp, resize:"vertical", minHeight:64, lineHeight:1.5 }}
+        placeholder="Motivo da compra (opcional) — ex: preciso para o trabalho, presente de aniversário..."
+        value={motivo}
+        onChange={e => setMotivo(e.target.value)}
+        rows={2}
+      />
       <div style={{ display:"flex", gap:8 }}>
         <button onClick={onClose} disabled={loading} style={{ flex:1, padding:10, borderRadius:8, border:"1.5px solid #e2e8f0", background:"#fff", color:"#64748b", fontWeight:600, cursor:"pointer" }}>Cancelar</button>
         <button onClick={handle} disabled={loading} style={{ flex:2, padding:10, borderRadius:8, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontWeight:700, cursor:"pointer", opacity:loading?0.7:1 }}>
@@ -669,6 +677,11 @@ function WishlistItem({ item, onToggle, onDelete }) {
                 <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, color:"#3b82f6", textDecoration:"none", display:"flex", alignItems:"center", gap:3 }}>🔗 Ver item</a>
               )}
             </div>
+            {item.motivo && (
+              <div style={{ marginTop:6, fontSize:12, color:"#64748b", background:"#f8fafc", borderRadius:7, padding:"5px 9px", border:"1px solid #e2e8f0", fontStyle:"italic", lineHeight:1.4 }}>
+                💬 {item.motivo}
+              </div>
+            )}
           </div>
         </div>
         <button onClick={onDelete} style={{ background:hov?"#fef2f2":"transparent", border:hov?"1.5px solid #fecaca":"1.5px solid transparent", color:hov?"#ef4444":"#cbd5e1", borderRadius:7, width:28, height:28, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:13, transition:"all 0.15s", padding:0, flexShrink:0 }}>✕</button>
